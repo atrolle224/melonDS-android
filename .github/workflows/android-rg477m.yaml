@@ -20,9 +20,6 @@ jobs:
           java-version: '21'
           distribution: zulu
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Build melonDS 477M
         run: |
           echo "MELONDS_KEYSTORE=$GITHUB_WORKSPACE/rg477m.jks" >> local.properties
