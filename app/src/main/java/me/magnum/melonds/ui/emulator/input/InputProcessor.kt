@@ -53,7 +53,8 @@ class InputProcessor(private val controllerConfiguration: ControllerConfiguratio
 
     override fun onMotionEvent(motionEvent: MotionEvent): Boolean {
         if (motionEvent.isFromSource(InputDevice.SOURCE_CLASS_JOYSTICK)) {
-            val deviceAxis = axisStates.filterKeys { it.deviceId == null || it.deviceId == motionEvent.deviceId }
+            // a stick mapped on one controller works on every connected one (handheld + Bluetooth pad)
+            val deviceAxis = axisStates
             deviceAxis.forEach {
                 val axis = it.key
                 val axisState = it.value

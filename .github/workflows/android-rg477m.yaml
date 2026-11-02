@@ -1,0 +1,49 @@
+name: Android 477M
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: zulu
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build melonDS 477M
+        run: |
+          echo "MELONDS_KEYSTORE=$GITHUB_WORKSPACE/rg477m.jks" >> local.properties
+          echo "MELONDS_KEYSTORE_PASSWORD=android" >> local.properties
+          echo "MELONDS_KEY_ALIAS=melonds" >> local.properties
+          echo "MELONDS_KEY_PASSWORD=android" >> local.properties
+          sed -i 's/abiFilters.add("armeabi-v7a")//; s/abiFilters.addAll(listOf("arm64-v8a", "x86_64"))/abiFilters.addAll(listOf("arm64-v8a"))/' app/build.gradle.kts
+          chmod +x ./gradlew
+          ./gradlew :app:assembleGitHubProdRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: melonds-477m-arm64
+          path: app/build/outputs/apk/gitHubProd/release/*.apk
+
+      - name: Keep only the newest build
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run list -R "$GITHUB_REPOSITORY" -w "Android 477M" -L 50 --json databaseId \
+            --jq ".[].databaseId | select(. != ${{ github.run_id }})" | while read -r id; do
+            gh run delete "$id" -R "$GITHUB_REPOSITORY" || true
+          done
